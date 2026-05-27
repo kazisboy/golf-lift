@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="GolfLift"/>
+<meta name="theme-color" content="#0f0f0f"/>
+<title>Golf Lift Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { background: #0f0f0f; color: #f0ede6; font-family: -apple-system, sans-serif; }
+#app { max-width: 600px; margin: 0 auto; padding: 20px 16px 100px; }
+h1 { font-family: Georgia, serif; font-size: 36px; font-style: italic; color: #fff; margin-bottom: 4px; }
+h1 span { color: #4ade80; }
+.sub { font-size: 11px; letter-spacing: .3em; color: #666; text-transform: uppercase; margin-bottom: 24px; }
+.daynav { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 20px; padding-bottom: 4px; }
+.daynav::-webkit-scrollbar { display: none; }
+.daybtn { flex-shrink: 0; padding: 8px 14px; border-radius: 8px; border: 1.5px solid #2a2a2a; background: #1a1a1a; color: #666; font-size: 12px; font-weight: 700; letter-spacing: .1em; cursor: pointer; }
+.daybtn.active { color: #000; border-color: transparent; }
+.card { background: #1a1a1a; border-radius: 12px; border: 1px solid #2a2a2a; margin-bottom: 12px; }
+.card-top { padding: 16px; border-left: 4px solid #4ade80; border-radius: 12px; }
+.card-tag { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+.card-title { font-family: Georgia, serif; font-size: 20px; font-style: italic; margin-bottom: 8px; }
+.card-focus { font-size: 13px; color: #888; line-height: 1.6; }
+.warmup { margin-top: 12px; padding: 10px 12px; background: #0f0f0f; border-radius: 8px; }
+.warmup-lbl { font-size: 9px; letter-spacing: .2em; color: #555; text-transform: uppercase; margin-bottom: 4px; }
+.warmup-txt { font-size: 12px; color: #666; line-height: 1.5; }
+.done-btn { width: 100%; margin-top: 12px; padding: 10px; border-radius: 8px; border: 1.5px solid #333; background: transparent; color: #666; font-size: 13px; font-weight: 700; cursor: pointer; letter-spacing: .1em; }
+.done-btn.done { color: #000; border-color: transparent; }
+.ex-section-lbl { font-size: 9px; letter-spacing: .3em; color: #555; text-transform: uppercase; margin: 16px 0 10px; }
+.ex { background: #1a1a1a; border-radius: 10px; border: 1px solid #2a2a2a; margin-bottom: 8px; overflow: hidden; }
+.ex-row { display: flex; align-items: center; gap: 12px; padding: 14px; cursor: pointer; }
+.ex-num { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; flex-shrink: 0; }
+.ex-name { font-weight: 600; font-size: 14px; }
+.ex-meta { font-size: 11px; color: #666; margin-top: 3px; }
+.ex-logged { font-size: 11px; font-weight: 700; margin-top: 2px; }
+.ex-arr { margin-left: auto; font-size: 20px; color: #444; transition: transform .2s; flex-shrink: 0; }
+.ex-arr.open { transform: rotate(90deg); }
+.ex-body { border-top: 1px solid #222; padding: 14px; background: #151515; display: none; }
+.ex-body.open { display: block; }
+.cue { padding: 10px 12px; background: #1a1a1a; border-radius: 8px; margin-bottom: 12px; }
+.cue-lbl { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+.cue-txt { font-size: 13px; color: #777; line-height: 1.6; }
+.log-lbl { font-size: 9px; letter-spacing: .2em; color: #555; text-transform: uppercase; font-weight: 600; margin-bottom: 8px; }
+.log-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+.log-grid label { font-size: 10px; color: #444; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.log-grid input { width: 100%; padding: 10px; border: 1.5px solid #2a2a2a; border-radius: 8px; background: #0f0f0f; color: #f0ede6; font-size: 16px; outline: none; -webkit-appearance: none; }
+.notes-lbl { font-size: 10px; color: #444; letter-spacing: .1em; text-transform: uppercase; display: block; margin-bottom: 4px; }
+.notes-area { width: 100%; padding: 10px; border: 1.5px solid #2a2a2a; border-radius: 8px; background: #0f0f0f; color: #f0ede6; font-size: 14px; outline: none; resize: none; line-height: 1.5; -webkit-appearance: none; }
+.finisher { border-radius: 10px; border: 1.5px solid #333; padding: 14px 16px; margin-top: 8px; }
+.fin-lbl { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; font-weight: 900; margin-bottom: 6px; }
+.fin-txt { font-size: 14px; font-style: italic; color: #ccc; line-height: 1.6; }
+.week-nav { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
+.wk-btn { background: none; border: 1px solid #2a2a2a; color: #666; border-radius: 6px; width: 34px; height: 34px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.wk-lbl { font-size: 12px; color: #666; letter-spacing: .15em; min-width: 100px; text-align: center; }
+.bnav { position: fixed; bottom: 0; left: 0; right: 0; background: #111; border-top: 1px solid #222; display: flex; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.bnav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 12px 0; background: none; border: none; color: #555; cursor: pointer; }
+.bnav-btn.active { color: #f0ede6; }
+.bnav-ico { font-size: 22px; }
+.bnav-lbl { font-size: 9px; letter-spacing: .15em; text-transform: uppercase; font-weight: 600; }
+.prog-day-row { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 20px; }
+.prog-day-row::-webkit-scrollbar { display: none; }
+.prog-day-btn { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; border: 1.5px solid #2a2a2a; background: #1a1a1a; color: #666; font-size: 11px; font-weight: 700; cursor: pointer; }
+.prog-day-btn.active { color: #000; border-color: transparent; }
+.prog-card { background: #1a1a1a; border-radius: 10px; border: 1px solid #2a2a2a; padding: 16px; margin-bottom: 10px; }
+.prog-name { font-weight: 700; font-size: 14px; }
+.prog-sub { font-size: 11px; color: #555; margin-top: 3px; }
+.prog-latest { font-size: 22px; font-weight: 900; margin-top: 8px; }
+.prog-bars { display: flex; align-items: flex-end; gap: 5px; height: 64px; margin-top: 12px; }
+.prog-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.prog-val { font-size: 8px; color: #555; }
+.prog-bar { width: 100%; border-radius: 3px 3px 0 0; min-height: 4px; }
+.prog-wk { font-size: 8px; color: #444; }
+.prog-empty { padding: 16px; text-align: center; font-size: 13px; color: #444; font-style: italic; }
+.week-dots { display: flex; gap: 5px; margin-bottom: 20px; }
+.wdot { width: 28px; height: 28px; border-radius: 6px; border: 1.5px solid #2a2a2a; background: #1a1a1a; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #444; }
+.wdot.done { color: #000; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Drive.<br><span id="accent-title">Distance.</span></h1>
+  <div class="sub">Golf Performance · 5-Day Advanced</div>
+  <div class="week-dots" id="week-dots"></div>
+  <div class="week-nav">
+    <button class="wk-btn" id="wk-prev">&#8249;</button>
+    <span class="wk-lbl" id="wk-lbl">THIS WEEK</span>
+    <button class="wk-btn" id="wk-next">&#8250;</button>
+  </div>
+  <div class="daynav" id="daynav"></div>
+  <div id="main"></div>
+</div>
+<div class="bnav">
+  <button class="bnav-btn active" id="bnav-workout" onclick="switchTab('workout')">
+    <span class="bnav-ico">&#127947;</span>
+    <span class="bnav-lbl">Workout</span>
+  </button>
+  <button class="bnav-btn" id="bnav-progress" onclick="switchTab('progress')">
+    <span class="bnav-ico">&#128200;</span>
+    <span class="bnav-lbl">Progress</span>
+  </button>
+</div>
+
+<script>
+var DAYS = [
+  { id:"mon", day:"MON", label:"Lower Power", tag:"EXPLOSIVENESS", ac:"#4ade80",
+    focus:"Hip drive and posterior chain power. The engine of every golf swing. Every yard starts from the ground up.",
+    warmup:"10 min: glute bridges x20, leg swings, hip 90/90 mobility, band clamshells x15 each",
+    exs:[
+      { id:"tdl", name:"Trap Bar Deadlift", sets:5, reps:"3", load:"90% 1RM", note:"Explosive concentric. Full hip lockout at top. Your ground-force king." },
+      { id:"bxj", name:"Box Jump (Seated Start)", sets:5, reps:"4", load:"Bodyweight", note:"Start seated, stand and EXPLODE immediately. Max height. Step down after." },
+      { id:"bss", name:"Bulgarian Split Squat", sets:4, reps:"6 each", load:"Heavy DBs", note:"Back foot elevated. Drive through front heel. Critical for swing weight shift." },
+      { id:"rdl", name:"Romanian Deadlift", sets:4, reps:"8", load:"70-75% 1RM", note:"Slow 3-second eccentric. Load the hamstrings. Feel the stretch." },
+      { id:"hth", name:"Barbell Hip Thrust", sets:4, reps:"10", load:"Moderate-Heavy", note:"Full glute lockout at top. 2 second pause. Glute power equals swing speed." },
+      { id:"ndc", name:"Nordic Hamstring Curl", sets:3, reps:"6", load:"Bodyweight", note:"Eccentric only. Lower as slow as possible. Best hamstring exercise." },
+      { id:"clf", name:"Single-Leg Calf Raise", sets:3, reps:"15 each", load:"Moderate", note:"Full ROM. Pause at top 1 second. Ankle stability impacts swing base." }
+    ],
+    fin:"3 x 6 broad jumps. Max distance each rep. Full reset between."
+  },
+  { id:"tue", day:"TUE", label:"Upper Push + Core", tag:"STRENGTH", ac:"#60a5fa",
+    focus:"Pressing strength and anti-rotation core. Transfer of hip power through the torso to the club.",
+    warmup:"Band pull-aparts x20, shoulder CARs, thoracic rotations, face pulls x15, serratus wall slides x10",
+    exs:[
+      { id:"bbp", name:"Barbell Bench Press", sets:5, reps:"5", load:"80-85% 1RM", note:"Scapular retraction, leg drive, controlled descent. Raw pressing strength." },
+      { id:"idb", name:"Incline DB Press", sets:4, reps:"8-10", load:"Moderate", note:"30-45 degree incline. Full stretch at bottom. Chest hypertrophy work." },
+      { id:"ppr", name:"Push Press", sets:4, reps:"5", load:"Heavy", note:"Dip-drive-press. Develops shoulder-to-arm power chain used in the through-swing." },
+      { id:"lmp", name:"Landmine Single-Arm Press", sets:3, reps:"10 each", load:"Moderate", note:"Rotational pressing pattern. Directly mimics the through-swing arm path." },
+      { id:"pal", name:"Pallof Press (Tall Kneeling)", sets:4, reps:"12 each", load:"Cable moderate", note:"Anti-rotation. Hold 2 seconds at extension. Maintains spine angle." },
+      { id:"abw", name:"Ab Wheel Rollout", sets:4, reps:"10-12", load:"Bodyweight", note:"Full extension. Best golf core exercise. Protects lower back every swing." },
+      { id:"wch", name:"Cable Woodchop (High to Low)", sets:4, reps:"12 each", load:"Moderate", note:"Mirrors the downswing exactly. Control the eccentric return." }
+    ],
+    fin:"3 x 10 med ball chest passes against wall. Max snap each rep."
+  },
+  { id:"wed", day:"WED", label:"Rotational Power", tag:"SWING SPEED", ac:"#f59e0b",
+    focus:"The most golf-specific day. Rotational force production is the number one driver of clubhead speed.",
+    warmup:"15 min: thoracic rotation drills, hip 90/90, half-kneeling hip flexor stretch, band pull-throughs x15",
+    exs:[
+      { id:"mbs", name:"Med Ball Rotational Slam", sets:5, reps:"6 each", load:"10-15 lb ball", note:"Load into trail hip, EXPLODE through rotation, slam diagonally. This is the golf swing." },
+      { id:"mbt", name:"Med Ball Scoop Toss (Side)", sets:4, reps:"6 each", load:"12-15 lb ball", note:"Hip hinge start. Explode up through the hip. Trains hip-to-core power sequencing." },
+      { id:"lmr", name:"Landmine Rotational Press", sets:4, reps:"8 each", load:"Moderate", note:"Rotate from hips first then press. Sequencing is the entire exercise." },
+      { id:"lhc", name:"Cable Chop (Low to High)", sets:4, reps:"10 each", load:"Light-moderate", note:"Upswing pattern. Fast concentric, controlled return. Build the X-factor stretch." },
+      { id:"slr", name:"Single-Leg RDL (KB)", sets:3, reps:"10 each", load:"Moderate KB", note:"Single leg hip hinge. Builds trail-leg stability used through impact." },
+      { id:"cop", name:"Copenhagen Plank", sets:3, reps:"25s each", load:"Bodyweight", note:"Adductor and hip strength. Prevents the deadly sway in your backswing." },
+      { id:"slp", name:"Sled Push", sets:4, reps:"20 yds", load:"Heavy", note:"Hip extension power. Short powerful strides. Conditions the posterior chain." }
+    ],
+    fin:"5 x 5 med ball wall shots rotational each side. Absolute maximum effort every rep."
+  },
+  { id:"thu", day:"THU", label:"Upper Pull + Grip", tag:"MUSCLE", ac:"#e879f9",
+    focus:"Back thickness, lat strength, and crushing grip. The forgotten keys to distance and clubface control.",
+    warmup:"Dead hang 30s, scapular pull-ups x10, band dislocates x10, face pulls x20",
+    exs:[
+      { id:"wpu", name:"Weighted Pull-Up", sets:5, reps:"5", load:"Belt + heavy plate", note:"Dead hang start. Chest to bar. Lat strength controls the swing arc." },
+      { id:"pdr", name:"Pendlay Row", sets:4, reps:"6", load:"Heavy", note:"Bar starts on floor each rep. Explosive pull. Builds mid-back power." },
+      { id:"scr", name:"Seated Cable Row (Wide Grip)", sets:4, reps:"10", load:"Moderate-heavy", note:"Full stretch at front. Chest tall. Squeeze shoulder blades hard." },
+      { id:"fcp", name:"Face Pull", sets:4, reps:"20", load:"Light-moderate", note:"External rotation at end range. Most important injury prevention for golfers." },
+      { id:"idc", name:"Incline DB Curl", sets:3, reps:"10-12", load:"Moderate", note:"Seated on incline. Full stretch at bottom. Bicep strength for club control." },
+      { id:"ppc", name:"Plate Pinch Carry", sets:4, reps:"30 yds", load:"2 plates pinched each hand", note:"Grip destroyer. Forearm strength equals clubface control at max swing speed." },
+      { id:"rvc", name:"Reverse Curl (EZ Bar)", sets:3, reps:"12", load:"Light", note:"Overhand grip. Builds extensors for wrist stability through impact." }
+    ],
+    fin:"3 x 30 second dead hang each arm. Towel grip if available."
+  },
+  { id:"fri", day:"FRI", label:"Full Body Power", tag:"PEAK OUTPUT", ac:"#f87171",
+    focus:"Peak output day. Heavy compounds and max-effort power. This is the session that adds yards.",
+    warmup:"15 min full body: foam roll, hip mobility, shoulder prep, activation drills. Do not rush this.",
+    exs:[
+      { id:"pwc", name:"Power Clean", sets:5, reps:"3", load:"75-80% 1RM", note:"Triple extension: ankles, knees, hips. Most transferable exercise to golf." },
+      { id:"fsq", name:"Front Squat", sets:4, reps:"5", load:"80% 1RM", note:"Elbows high, upright torso. Builds quad dominance and thoracic mobility." },
+      { id:"sfp", name:"Single-Arm DB Floor Press", sets:4, reps:"8 each", load:"Heavy DB", note:"Core anti-rotates automatically. Trains rotational stabilizers every rep." },
+      { id:"cpt", name:"Cable Pull-Through", sets:4, reps:"15", load:"Moderate", note:"Hip hinge pattern. Glute squeeze at lockout. Reinforces downswing sequencing." },
+      { id:"tsh", name:"Trap Bar Shrug + Hold", sets:3, reps:"10 + 5s hold", load:"Heavy", note:"Upper trap for postural endurance. Stay tall through the final round." },
+      { id:"mbd", name:"Med Ball Drop Step Slam", sets:4, reps:"5 each", load:"15-20 lb ball", note:"Step, load, explode. Trains foot-to-hip downswing sequencing. Max effort." },
+      { id:"fmc", name:"Farmers Carry", sets:3, reps:"40 yds", load:"Heavy DBs or trap bar", note:"Walk tall. Crush the handles. Strength, conditioning, and grip in one." }
+    ],
+    fin:"10 min EMOM: odd minutes 5 power cleans light, even minutes 6 box jumps."
+  }
+];
+
+var currentDay = 0;
+var currentWeek = 0;
+var currentTab = "workout";
+var currentProgDay = 0;
+var openEx = null;
+
+function lsKey(w, d, e) { return "gl:w" + w + ":" + d + ":" + e; }
+function doneKey(w, d) { return "gl:done:w" + w + ":" + d; }
+function noteKey(w, d, e) { return "gl:note:w" + w + ":" + d + ":" + e; }
+
+function getLog(d, e) {
+  try { return JSON.parse(localStorage.getItem(lsKey(currentWeek, d, e)) || "{}"); } catch(err) { return {}; }
+}
+function saveLog(d, e, v) {
+  try { localStorage.setItem(lsKey(currentWeek, d, e), JSON.stringify(v)); } catch(err) {}
+}
+function isDone(d) { return localStorage.getItem(doneKey(currentWeek, d)) === "1"; }
+function toggleDone(d) {
+  var k = doneKey(currentWeek, d);
+  if (localStorage.getItem(k) === "1") { localStorage.removeItem(k); } else { localStorage.setItem(k, "1"); }
+}
+function getNote(d, e) { return localStorage.getItem(noteKey(currentWeek, d, e)) || ""; }
+function saveNote(d, e, v) {
+  if (v) { localStorage.setItem(noteKey(currentWeek, d, e), v); } else { localStorage.removeItem(noteKey(currentWeek, d, e)); }
+}
+function getProg(d, e) {
+  var out = [];
+  for (var w = -4; w <= 8; w++) {
+    try {
+      var raw = localStorage.getItem(lsKey(w, d, e));
+      if (raw) { var p = JSON.parse(raw); if (p.weight) { out.push({ w: w, v: parseFloat(p.weight) }); } }
+    } catch(err) {}
+  }
+  return out;
+}
+function weekLabel() {
+  if (currentWeek === 0) return "THIS WEEK";
+  if (currentWeek > 0) return "WEEK +" + currentWeek;
+  return "WEEK " + currentWeek;
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById("bnav-workout").className = "bnav-btn" + (tab === "workout" ? " active" : "");
+  document.getElementById("bnav-progress").className = "bnav-btn" + (tab === "progress" ? " active" : "");
+  renderMain();
+}
+
+function renderAll() {
+  renderDots();
+  renderWeekNav();
+  renderDayNav();
+  renderMain();
+}
+
+function renderDots() {
+  var d = DAYS[currentDay];
+  document.getElementById("accent-title").style.color = d.ac;
+  var html = "";
+  for (var i = 0; i < DAYS.length; i++) {
+    var dn = isDone(DAYS[i].id);
+    var style = dn ? "background:" + DAYS[i].ac + ";border-color:" + DAYS[i].ac + ";color:#000;" : "";
+    html += '<div class="wdot' + (dn ? " done" : "") + '" style="' + style + '">' + DAYS[i].day[0] + '</div>';
+  }
+  document.getElementById("week-dots").innerHTML = html;
+}
+
+function renderWeekNav() {
+  document.getElementById("wk-lbl").textContent = weekLabel();
+}
+
+function renderDayNav() {
+  var d = DAYS[currentDay];
+  var html = "";
+  for (var i = 0; i < DAYS.length; i++) {
+    var act = currentDay === i;
+    var style = act ? "background:" + DAYS[i].ac + ";border-color:" + DAYS[i].ac + ";color:#000;" : "";
+    html += '<button class="daybtn' + (act ? " active" : "") + '" style="' + style + '" onclick="selectDay(' + i + ')">' + DAYS[i].day + '</button>';
+  }
+  document.getElementById("daynav").innerHTML = html;
+}
+
+function selectDay(i) {
+  currentDay = i;
+  openEx = null;
+  renderAll();
+  window.scrollTo(0, 0);
+}
+
+function renderMain() {
+  if (currentTab === "workout") { renderWorkout(); } else { renderProgress(); }
+}
+
+function renderWorkout() {
+  var day = DAYS[currentDay];
+  var dn = isDone(day.id);
+  var doneStyle = dn ? "background:" + day.ac + ";color:#000;border-color:" + day.ac + ";" : "";
+  var html = "";
+
+  html += '<div class="card"><div class="card-top" style="border-left-color:' + day.ac + '">';
+  html += '<div class="card-tag" style="color:' + day.ac + '">' + day.tag + '</div>';
+  html += '<div class="card-title">' + day.label + '</div>';
+  html += '<div class="card-focus">' + day.focus + '</div>';
+  html += '<div class="warmup"><div class="warmup-lbl">Warm-Up</div><div class="warmup-txt">' + day.warmup + '</div></div>';
+  html += '<button class="done-btn' + (dn ? " done" : "") + '" style="' + doneStyle + '" onclick="toggleDayDone()">' + (dn ? "DONE!" : "Mark Session Done") + '</button>';
+  html += '</div></div>';
+
+  html += '<div class="ex-section-lbl">Exercises — tap to log</div>';
+
+  for (var i = 0; i < day.exs.length; i++) {
+    var ex = day.exs[i];
+    var log = getLog(day.id, ex.id);
+    var note = getNote(day.id, ex.id);
+    var open = openEx === i;
+    var numBg = "background:" + day.ac + "22;color:" + day.ac + ";";
+    var borderStyle = open ? "border-color:" + day.ac + "66;" : "";
+
+    html += '<div class="ex" style="' + borderStyle + '" id="ex-' + i + '">';
+    html += '<div class="ex-row" onclick="toggleEx(' + i + ')">';
+    html += '<div class="ex-num" style="' + numBg + '">' + (i + 1) + '</div>';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="ex-name">' + ex.name + '</div>';
+    html += '<div class="ex-meta">' + ex.sets + ' sets x ' + ex.reps + ' - ' + ex.load + '</div>';
+    if (log.weight) { html += '<div class="ex-logged" style="color:' + day.ac + '">' + log.weight + ' lbs</div>'; }
+    html += '</div>';
+    html += '<div class="ex-arr' + (open ? " open" : "") + '">&#8250;</div>';
+    html += '</div>';
+
+    if (open) {
+      html += '<div class="ex-body open">';
+      html += '<div class="cue" style="border-left:3px solid ' + day.ac + '">';
+      html += '<div class="cue-lbl" style="color:' + day.ac + '">Coaching Cue</div>';
+      html += '<div class="cue-txt">' + ex.note + '</div></div>';
+      html += '<div class="log-lbl">Log - ' + weekLabel() + '</div>';
+      html += '<div class="log-grid">';
+      html += '<div><label>Weight (lbs)</label><input type="number" inputmode="decimal" placeholder="e.g. 185" value="' + (log.weight || "") + '" onchange="logField(\'' + day.id + '\',\'' + ex.id + '\',\'weight\',this.value)"/></div>';
+      html += '<div><label>Reps Done</label><input type="number" inputmode="numeric" placeholder="' + ex.reps + '" value="' + (log.repsActual || "") + '" onchange="logField(\'' + day.id + '\',\'' + ex.id + '\',\'repsActual\',this.value)"/></div>';
+      html += '<div><label>Sets Done</label><input type="number" inputmode="numeric" placeholder="' + ex.sets + '" value="' + (log.setsActual || "") + '" onchange="logField(\'' + day.id + '\',\'' + ex.id + '\',\'setsActual\',this.value)"/></div>';
+      html += '<div><label>RPE (1-10)</label><input type="number" inputmode="numeric" placeholder="8" min="1" max="10" value="' + (log.rpe || "") + '" onchange="logField(\'' + day.id + '\',\'' + ex.id + '\',\'rpe\',this.value)"/></div>';
+      html += '</div>';
+      html += '<label class="notes-lbl">Notes</label>';
+      html += '<textarea class="notes-area" rows="2" placeholder="How did it feel? PRs?" onchange="logNote(\'' + day.id + '\',\'' + ex.id + '\',this.value)">' + note + '</textarea>';
+
+```
+  html += '</div>';
+}
+html += '</div>';
+```
+
+}
+
+html += ‘<div class="finisher" style="border-color:' + day.ac + '44;background:' + day.ac + '11">’;
+html += ‘<div class="fin-lbl" style="color:' + day.ac + '">Finisher</div>’;
+html += ‘<div class="fin-txt">’ + day.fin + ‘</div></div>’;
+
+document.getElementById(“main”).innerHTML = html;
+}
+
+function renderProgress() {
+var day = DAYS[currentProgDay];
+var html = ‘<div class="prog-day-row">’;
+for (var i = 0; i < DAYS.length; i++) {
+var act = currentProgDay === i;
+var style = act ? “background:” + DAYS[i].ac + “;border-color:” + DAYS[i].ac + “;color:#000;” : “”;
+html += ‘<button class=“prog-day-btn’ + (act ? “ active” : “”) + ‘” style=”’ + style + ‘” onclick=“selectProgDay(’ + i + ‘)”>’ + DAYS[i].day + ’ - ’ + DAYS[i].label + ‘</button>’;
+}
+html += ‘</div>’;
+
+for (var i = 0; i < day.exs.length; i++) {
+var ex = day.exs[i];
+var pd = getProg(day.id, ex.id);
+var maxW = 0;
+for (var j = 0; j < pd.length; j++) { if (pd[j].v > maxW) { maxW = pd[j].v; } }
+var latest = pd.length ? pd[pd.length - 1].v : null;
+
+```
+html += '<div class="prog-card">';
+html += '<div style="display:flex;justify-content:space-between;align-items:flex-start">';
+html += '<div><div class="prog-name">' + ex.name + '</div><div class="prog-sub">' + ex.sets + ' x ' + ex.reps + ' - ' + ex.load + '</div></div>';
+if (latest) { html += '<div><div class="prog-latest" style="color:' + day.ac + '">' + latest + ' lbs</div><div style="font-size:9px;color:#555;letter-spacing:.1em">LATEST</div></div>'; }
+html += '</div>';
+
+if (pd.length > 0) {
+  html += '<div class="prog-bars">';
+  for (var j = 0; j < pd.length; j++) {
+    var pct = maxW > 0 ? pd[j].v / maxW : 0;
+    var h = Math.max(4, Math.round(pct * 52));
+    var isLast = j === pd.length - 1;
+    var barColor = isLast ? day.ac : day.ac + "44";
+    html += '<div class="prog-col">';
+    html += '<div class="prog-val">' + pd[j].v + '</div>';
+    html += '<div class="prog-bar" style="height:' + h + 'px;background:' + barColor + '"></div>';
+    html += '<div class="prog-wk">W' + (pd[j].w >= 0 ? "+" : "") + pd[j].w + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="font-size:11px;color:#555;margin-top:8px">PR: <span style="color:' + day.ac + ';font-weight:700">' + maxW + ' lbs</span> - ' + pd.length + ' sessions logged</div>';
+} else {
+  html += '<div class="prog-empty">No data yet. Log in the Workout tab.</div>';
+}
+html += '</div>';
+```
+
+}
+
+document.getElementById(“main”).innerHTML = html;
+}
+
+function toggleDayDone() {
+toggleDone(DAYS[currentDay].id);
+renderAll();
+}
+
+function toggleEx(i) {
+openEx = openEx === i ? null : i;
+renderWorkout();
+if (openEx !== null) {
+setTimeout(function() {
+var el = document.getElementById(“ex-” + openEx);
+if (el) { el.scrollIntoView({ behavior: “smooth”, block: “nearest” }); }
+}, 50);
+}
+}
+
+function logField(d, e, field, val) {
+var log = getLog(d, e);
+log[field] = val;
+saveLog(d, e, log);
+renderDots();
+}
+
+function logNote(d, e, val) { saveNote(d, e, val); }
+
+function selectProgDay(i) { currentProgDay = i; renderProgress(); }
+
+document.getElementById(“wk-prev”).onclick = function() { currentWeek–; openEx = null; renderAll(); };
+document.getElementById(“wk-next”).onclick = function() { currentWeek++; openEx = null; renderAll(); };
+
+renderAll();
+</script>
+
+</body>
+</html>
